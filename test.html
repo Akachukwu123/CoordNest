@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CoordNest — Cadastral</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/plot.css">
+  <link rel="stylesheet" href="css/plan.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="icon" href="img/logo.png">
+  <link rel="stylesheet" type="text/css" href="css/fontawesome/css/all.min.css">
+</head>
+ 
+
+<body>
+
+  <header class="top-bar">
+    <div class="logo"><img src="img/coordnest-logo.png"></div>
+    <div class="project-selector" id="project-dropdown-trigger">
+      <div class="check">
+        <span class="user-initial">E</span>
+        <img src="img/caret.png" class="caret">
+      </div>
+      <div class="dropdown-menu" id="project-dropdown">
+        <div class="namedisplay"> 
+          <p>johndoe@gmail.com</p>
+        </div>
+        <a href="projects.php" class="dropdown-item"><span class="fas fa-tasks"></span> Projects</a>
+        <a href="subscriptions.php" class="dropdown-item"><span class="far fa-credit-card"></span> Subscriptions</a>
+        <a href="#" class="dropdown-item logout"><span class="fas fa-power-off"></span> Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ── Left panel ── -->
+    <section class="left-panel">
+      <div class="new-project">
+        <button><span class="fas fa-plus"></span> New File</button>
+      </div>
+
+      <div class="project-info">
+        <label>Project name</label>
+        <input type="text" value="Untitled" class="project-name-input" />
+      </div> 
+
+      <h3>Coordinates</h3>
+
+      <!-- Land parcel input -->
+      <div class="coordinate">
+        <p>Paste your coordinates here: Eastings, Northings</p>
+        <div class="quick-input-wrapper">
+          <input type="text" id="quick-input" class="quick-input-field" placeholder="...Eastings/Northings" />
+          <button class="quick-input-clear" id="quick-input-clear">
+            <span class="fas fa-times-circle"></span>
+          </button>
+        </div>
+        <label class="image-upload-btn">
+          <input type="file" accept=".txt,.csv,.xlsx,.xls" id="file-upload" hidden />
+          <span class="fas fa-file"></span>
+          Upload Notepad (TXT, CSV, Excel)
+        </label>
+      </div>
+
+      <!-- Feedback for coordinate input -->
+      <div id="coord-feedback" style="display:none;"></div>
+
+      <!-- Swap button -->
+      <button id="swap-btn" style="display:none;">↔ Swap Eastings/Northings</button>
+
+      <!-- Coordinate table — stays after plot -->
+      <table id="coord-table">
+        <thead>
+          <tr>
+            <th>Points</th>
+            <th>Easting</th>
+            <th>Northing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>P1</td>
+            <td><input type="text" value="" /></td>
+            <td><input type="text" value="" /></td>
+          </tr>
+        </tbody>
+      </table>
+
+ 
+
+      <!-- Feedback just above plot button -->
+      <div id="plot-feedback" style="display:none;"></div>
+      <br><br>
+      <button id="plot-btn" class="primary-btn">Plot</button>
+      <button id="clear-all" class="reset-btn"><span class="fas fa-redo"></span> Reset</button>
+
+    </section>
+
+    <!-- ── Centre — Plot area ── -->
+    <section class="plot-panel">
+      <div id="plot-container">
+        <div class="placeholder-text">Plot will appear here after you click Plot</div>
+      </div>
+    </section>
+
+    <!-- ── Right panel ── -->
+    <aside class="right-panel">
+
+      <div class="results">
+        <!-- Drag lines for the text size and text rotation -->
+        <div id="drag-lines" style="display:none;"></div>
+      </div>
+ 
+
+      <div class="light-bg">
+        <!-- Area -->
+        <div class="result-item" style="display:flex">
+          <h3>Perimeter Area:</h3> 
+          <h3><span class="value" id="area-value">0</span></h3>
+        </div>
+
+        <div id="scale">
+            <h3>Choose scale</h3>
+          <select>
+            <option>1:250</option>
+            <option selected>1:500</option>
+            <option>1:1000</option>
+            <option>1:2000</option>
+            <option>1:5000</option>
+          </select>
+        </div>
+      </div>
+
+
+      <div class="light-bg">
+        <!-- Distances — hidden until plot exists -->
+        <div id="distances-section" style="display:none;">
+          <table id="distances-table">
+            <thead>
+              <tr>
+                <th>Lines</th>
+                <th>Distances</th>
+              </tr>
+            </thead>
+            <tbody id="dist-tbody"></tbody>
+          </table>
+          <button id="adjust-btn">Adjust</button>
+        </div>
+      </div>
+
+      <div class="light-bg">
+        <!-- Access Roads — hidden until plot exists -->
+        <div id="all-access-wrap" style="display:none; margin-top: 3vh;"> 
+          <input type="text" id="access-road-offset" value="7">
+        </div>
+      </div>
+
+      <div class="light-bg">
+        <!-- Pillar numbers — hidden until plot exists -->
+        <div id="pillars-section" style="display:none;">
+          <h3>Pillar numbers</h3>
+          <p>Pillar caption</p>
+          <input type="text" id="pillar-caption" placeholder="e.g SC/IMCN">
+          <div class="flex">
+            <div>
+              <p>From</p>
+              <input type="text" id="pillar-from" placeholder="e.g 3310">
+            </div>
+            <div>  
+              <p>To</p>
+              <input type="text" id="pillar-to" placeholder="e.g 3315">
+            </div>
+          </div>
+          <div id="pillar-feedback" style="display:none;"></div>
+          <button id="assign-pillar-btn">Assign pillar numbers</button>
+        </div>
+      </div>
+
+      <div class="light-bg">
+        <!-- Pillar assignment table — editable, hidden until pillars assigned -->
+        <div id="pillar-table-section" style="display:none; margin-top: 2vh;">
+          <table id="pillar-assign-table">
+            <thead>
+              <tr>
+                <th>Points</th>
+                <th>Pillar Number</th>
+              </tr>
+            </thead>
+            <tbody id="pillar-assign-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="light-bg tools">
+        <h3>Delete</h3>
+        <button id="delete-btn"><span class="fas fa-trash"></span> Delete</button>
+
+        <h3>Draw</h3>
+        
+        <button id="square-btn"><span class="fas fa-vector-square"></span> Square</button> 
+        <div class="square-dimensions" id="square-inputs" style="display:none; margin:8px 0 12px 0;">
+          <input type="text" id="square-height" placeholder="Height(m)" width="45%">
+          <input type="text" id="square-width"  placeholder="Width(m)" width="45%">
+        </div>
+
+        <button id="straight-btn"><span class="fas fa-ruler"></span> Straight Line</button> 
+        <div class="straight-length" id="straight-inputs" style="display:none; margin:8px 0 12px 0;">
+          <input type="text" id="straight-length" placeholder="Length(m)"> 
+        </div>
+
+        <button id="dashed-btn"><span class="fas fa-ellipsis-h"></span> Dashed Line</button> 
+        <div class="dashed-length" id="dashed-inputs" style="display:none; margin:8px 0 12px 0;">
+          <input type="text" id="dashed-length" placeholder="Length(m)"> 
+        </div>
+
+        <h3>Custom Text</h3>
+        <button id="create-text"><span class="fas fa-text-height"></span> Create Text Box</button>
+      </div>
+
+      <div id="generate-feedback" style="display:none;"></div>
+      <button class="generate-btn" onclick="generatePlan()">Generate Survey Plan</button>
+
+      <div class="export-section">
+        <h3>Export options</h3>
+        <label><input type="radio" name="export" value="dxf" checked /> DXF (AutoCAD File)</label> 
+        <label><input type="radio" name="export" value="jpg" /> Image (jpg)</label>
+        <label><input type="radio" name="export" value="txt" /> Coordinates (txt)</label>
+        <div id="export-feedback" style="display:none;"></div>
+        <button id="export-btn" class="export-btn">
+          <span class="fas fa-file-download"></span> Export
+        </button>
+
+        <!-- Trigger Button For Sign In  -->
+        <button id="signin-btn" class="modal-button open-signin-modal">
+            Export  
+        </button>
+
+        <!-- Trigger Button For Subscription  -->
+        <button id="subscribe-btn" class="modal-button open-subscribe-modal">
+            Export  
+        </button>
+      </div>
+
+    </aside>
+
+  </main>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="survey-plan" id="plan-overlay" style="display:none;">
+      <div class="btn-section">
+        <button style="float:right;" onclick="closePlan()">Close</button>
+      </div>
+
+      <div class="survey-body">
+        <div class="a4-container">
+            <div class="a4-sheet">
+              <div class="a4-content">
+
+                <!-- Header -->
+                <div class="surv-header">
+                  <div class="arrow-box">
+                     <div class="upper-plan-no">
+                        <p>PLAN NO:</p>
+                        <input type="text" id="plan-plan-no-top" placeholder="XXXXXX" style="padding: 0px; border-radius: 0px;">
+                      </div> 
+                  </div>
+
+                  <div class="title-block"> 
+                    <li>PLAN SHEWING LANDED PROPERTY</li> 
+                    <li>OF </li>
+                    <li><input type="text" id="plan-client" placeholder="XXXX"></li> 
+                    <li>AT</li> 
+                    <li><textarea id="plan-address" rows="4" placeholder="XXXXXX"></textarea></li> 
+                    <li id="plan-scale-display">SCALE 1:500</li>
+                    <div id="scale-rule"></div>
+                    <li id="plan-origin-display" style="color:#6b69f0; font-weight:bold;"> ORIGIN: UTM ZONE 32N</li>
+                    <li id="plan-area-display" style="color:red; font-weight:bold;">AREA: </li>
+                  </div>
+                </div>
+
+                 
+
+                <!-- Plot Area -->
+                <div class="plot-area"> 
+                   
+                </div>
+
+                <!-- Footer -->
+                <div class="footer">
+                    <div class="doc-no">
+                      <div class="plan-no">
+                        <p>PLAN NO:</p>
+                        <input type="text" id="plan-plan-no" placeholder="XXXXXX" style="padding: 0px; border-radius: 0px;">
+                      </div>
+                      <div class="depo-no">
+                        <p>DEPOSITION NO: </p>
+                        <input type="text" id="plan-dep-no" placeholder="XXXXXX" style="padding: 0px; border-radius: 0px;">
+                      </div>
+                    </div>
+
+                    <div class="seal">
+                       
+                    </div>
+
+                    <div class="surveyor">
+                       <div class="copy-det">
+                        <center>
+                         <li>CERTIFIED TRUE COPY OF SITE PLAN</li>
+                         <li><input type="text" id="plan-date" placeholder="MADE BY ME ON: XXXXX" style="padding: 0px; border-radius: 0px;"></li>
+                        </center> 
+                       </div>
+                       <div class="surv-address">
+                        <center>
+                          <input type="text" id="plan-surveyor" placeholder="SURV. XXXX" style="padding: 0px; border-radius: 0px;">
+                          <textarea id="plan-surv-address" rows="5" placeholder="Address XXX" style="padding: 0px; border-radius: 0px;"></textarea>
+                        </center>
+                       </div> 
+                    </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+
+        <div class="plan-field-input">
+          <h4>Click on the ares marked "XXXXXX" to edit with the correct details</h4>
+          
+          <!-- Set Origin — hidden until plot exists -->
+          <div id="origin-section" style="display:none;">
+            <h3>Choose your point of origin</h3>
+            <div id="origin-radios"></div>
+            <div id="origin-section-feedback" style="display:none;"></div>
+          </div> 
+
+          <div style="margin-top:5vh">
+            <h3>Coordinate System</h3>
+            <select id="plan-coordinate-system">
+              <option>UTM ZONE 32N</option>
+              <option>NIGERIAN NATIONAL</option>
+            </select>
+          </div>
+
+
+
+
+          <div style="margin-top: 10vh; text-align: center;">
+            <button id="plan-download-pdf-btn" class="primary-btn">Download PDF</button>
+          </div>
+
+          <!-- Trigger Button For Sign In  -->
+        <button id="signin-btn" class="modal-button open-signin-modal">
+            Export  
+        </button>
+
+        <!-- Trigger Button For Subscription  -->
+        <button id="subscribe-btn" class="modal-button open-subscribe-modal">
+            Export  
+        </button>
+
+        </div>
+      </div>
+  </div>
+  
+
+
+
+
+
+
+
+<!-- Sign In Required Modal -->
+<div id="signin-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Sign In Needed</h2>
+        </div>
+        <div class="modal-body">
+            <p>You need an account to export your Survey plans, PDF, Images or AutoCAD files.</p>
+        </div>
+        <div class="modal-footer">
+            <a href="sign-in" class="modal-btn secondary-btn">Sign In</a>
+            <a href="signup" class="modal-btn primary-btn">Create Account</a>
+        </div>
+        <button class="modal-close">&times;</button>
+    </div>
+</div>
+
+<!-- Sign In Required Modal -->
+<div id="subscribe-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Subscription Needed</h2>
+        </div>
+        <div class="modal-body">
+            <p>Your subscription or free trial has expired. Subscribe now to enjoy unlimited access to all our tools and resources.</p>
+        </div>
+        <div class="modal-footer"> 
+            <a href="susbscriptions" class="modal-btn primary-btn">Subscribe</a>
+        </div>
+        <button class="subscribe-close">&times;</button>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+  const openPlan = document.getElementById('plan-overlay');
+  openPlan.style.display='none';
+
+  function generatePlan(){
+    openPlan.style.display='block';
+  }
+  function closePlan(){
+    openPlan.style.display='none';
+  }
+
+</script>
+
+
+
+
+
+
+  <script src="js/d3.v7.js"></script>
+  <script src="js/d3.v7.min.js"></script>
+  <script src="js/jspdf.umd.min.js"></script>
+  <script src="js/xlsx.full.min.js"></script>
+  <script src="js/modal.js"></script>  
+  <script src="test.js"></script>
+  <script src="cadastral.production.js?v=<?php echo filemtime('cadastral.production.js'); ?>" defer></script>
+
+</body>
+</html>
